@@ -1,25 +1,34 @@
-import "../styles/globals.css";
-import { Inter } from "next/font/google";
-import Navbar from "@/components/Navbar";
-import { Toaster } from "react-hot-toast";
-import AnimatedBackground from "@/components/AnimatedBackground";
+"use client";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+import Sidebar from "@/components/Sidebar";
 
-const inter = Inter({ subsets: ["latin"] });
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const [session, setSession] = useState<any>(undefined);
+  const router = useRouter();
 
-export const metadata = {
-  title: "UniHub Ethiopia",
-  description: "Ethiopian university student platform",
-};
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) router.push("/auth");
+      else setSession(session);
+    });
+  }, []);
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+  if (session === undefined) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <p className="text-neon-blue">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!session) return null;
+
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-dark text-gray-200 antialiased`}>
-        <AnimatedBackground />
-        <Navbar />
-        <main className="min-h-screen pt-20">{children}</main>
-        <Toaster position="top-right" />
-      </body>
-    </html>
+    <div className="flex h-[calc(100vh-4rem)]">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto px-4 py-6">{children}</main>
+    </div>
   );
 }
